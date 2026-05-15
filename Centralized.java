@@ -19,7 +19,7 @@ public class Centralized {
     // ================= MYSQL CONFIG =================
     static final String MYSQL_URL = "jdbc:mysql://localhost:3306/estudy";
     static final String MYSQL_USER = "root";
-    static final String MYSQL_PASS = "PranavKharage";
+    static final String MYSQL_PASS = "YOUR_PASSWORD_HERE";
 
     // ================= MONGODB CONFIG =================
     static final String MONGO_URL = "mongodb://localhost:27017";
