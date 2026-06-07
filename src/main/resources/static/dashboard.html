@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Study - Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  .navbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+  .navbar h1 { color: #3b82f6; font-size: 22px; }
+  .navbar .user-info { display: flex; align-items: center; gap: 15px; }
+  .navbar .username { color: #94a3b8; font-size: 14px; }
+  .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .hero { text-align: center; padding: 50px 20px 30px; }
+  .hero h2 { font-size: 32px; color: #f1f5f9; margin-bottom: 10px; }
+  .hero p { color: #94a3b8; font-size: 16px; }
+  .subjects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 40px 50px; max-width: 1200px; margin: 0 auto; }
+  .subject-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px; cursor: pointer; transition: all 0.3s; text-decoration: none; color: inherit; }
+  .subject-card:hover { border-color: #3b82f6; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(59,130,246,0.15); }
+  .subject-card .icon { font-size: 40px; margin-bottom: 15px; }
+  .subject-card h3 { font-size: 20px; color: #f1f5f9; margin-bottom: 8px; }
+  .subject-card p { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+  .subject-card .tag { display: inline-block; background: #1d4ed8; color: #bfdbfe; padding: 3px 10px; border-radius: 20px; font-size: 11px; margin-top: 12px; }
+  .loading { text-align: center; padding: 60px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <h1>📚 E-Study Platform</h1>
+  <div class="user-info">
+    <span class="username">👋 Welcome, <strong id="usernameDisplay"></strong></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <h2>Choose a Subject to Study</h2>
+  <p>Master core computer science concepts for your interviews</p>
+</div>
+
+<div class="subjects-grid" id="subjectsGrid">
+  <div class="loading">Loading subjects...</div>
+</div>
+
+<script>
+const subjectInfo = {
+  'OOP': { icon: '☕', desc: 'Classes, Objects, 4 Pillars, Overloading, Overriding, Interface, Abstract Class and more Java OOP concepts.' },
+  'DSA': { icon: '🧩', desc: 'Arrays, Linked Lists, Stack, Queue, Trees, Sorting, Searching, Graphs and Time Complexity.' },
+  'OS': { icon: '💻', desc: 'Process, Thread, Deadlock, CPU Scheduling, Memory Management, Semaphore and File System.' },
+  'CN': { icon: '🌐', desc: 'OSI Model, TCP/IP, HTTP, DNS, IP Addressing, TCP vs UDP, Routers and Network Protocols.' },
+  'DBMS': { icon: '🗄️', desc: 'ACID, Normalization, SQL Commands, Joins, Keys, Indexing and Transactions.' }
+};
+
+// Check login
+const user = sessionStorage.getItem('user');
+if (!user) { window.location.href = '/login.html'; }
+else {
+  const u = JSON.parse(user);
+  document.getElementById('usernameDisplay').textContent = u.username;
+  loadSubjects();
+}
+
+async function loadSubjects() {
+  try {
+    const res = await fetch('/api/subjects/all');
+    const data = await res.json();
+    const grid = document.getElementById('subjectsGrid');
+    if (data.success && data.data.length > 0) {
+      grid.innerHTML = data.data.map(sub => {
+        const info = subjectInfo[sub] || { icon: '📖', desc: 'Study material for ' + sub };
+        return `
+          <div class="subject-card" onclick="openSubject('${sub}')">
+            <div class="icon">${info.icon}</div>
+            <h3>${sub}</h3>
+            <p>${info.desc}</p>
+            <span class="tag">Interview Ready</span>
+          </div>`;
+      }).join('');
+    } else {
+      grid.innerHTML = '<div class="loading">No subjects found. Data may still be loading...</div>';
+    }
+  } catch(e) {
+    document.getElementById('subjectsGrid').innerHTML = '<div class="loading">Error loading subjects.</div>';
+  }
+}
+
+function openSubject(name) {
+  window.location.href = '/subject.html?name=' + name;
+}
+
+function logout() {
+  sessionStorage.removeItem('user');
+  window.location.href = '/login.html';
+}
+</script>
+</body>
+</html>

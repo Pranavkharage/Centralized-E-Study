@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Study Platform - Login</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .container { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 40px; width: 400px; }
+  .logo { text-align: center; margin-bottom: 30px; }
+  .logo h1 { color: #3b82f6; font-size: 28px; }
+  .logo p { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+  .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid #334155; }
+  .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; color: #94a3b8; border-bottom: 2px solid transparent; transition: all 0.3s; }
+  .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+  .form-group { margin-bottom: 18px; }
+  label { display: block; color: #94a3b8; font-size: 13px; margin-bottom: 6px; }
+  input { width: 100%; padding: 11px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; outline: none; transition: border-color 0.3s; }
+  input:focus { border-color: #3b82f6; }
+  button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.3s; margin-top: 5px; }
+  button:hover { background: #2563eb; }
+  .msg { padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 13px; text-align: center; display: none; }
+  .msg.success { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+  .msg.error { background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <h1>📚 E-Study</h1>
+    <p>Your Centralized Interview Preparation Platform</p>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('login')">Login</div>
+    <div class="tab" onclick="showTab('register')">Register</div>
+  </div>
+
+  <!-- Login Form -->
+  <div id="loginForm">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Enter your username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Enter your password">
+    </div>
+    <button onclick="login()">Login</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <!-- Register Form -->
+  <div id="registerForm" style="display:none">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="regUsername" placeholder="Choose a username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="regPassword" placeholder="Choose a password">
+    </div>
+    <button onclick="register()">Create Account</button>
+    <div class="msg" id="registerMsg"></div>
+  </div>
+</div>
+
+<script>
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+}
+
+async function login() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!username || !password) { showMsg('loginMsg', 'Please fill all fields', false); return; }
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('user', JSON.stringify(data.data));
+      showMsg('loginMsg', 'Login successful! Redirecting...', true);
+      setTimeout(() => window.location.href = '/dashboard.html', 1000);
+    } else { showMsg('loginMsg', data.message, false); }
+  } catch(e) { showMsg('loginMsg', 'Server error. Make sure app is running.', false); }
+}
+
+async function register() {
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value.trim();
+  if (!username || !password) { showMsg('registerMsg', 'Please fill all fields', false); return; }
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMsg('registerMsg', 'Account created! Please login.', true);
+    } else { showMsg('registerMsg', data.message, false); }
+  } catch(e) { showMsg('registerMsg', 'Server error.', false); }
+}
+
+function showMsg(id, msg, success) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'msg ' + (success ? 'success' : 'error');
+  el.style.display = 'block';
+}
+
+// Redirect if already logged in
+if (sessionStorage.getItem('user')) window.location.href = '/dashboard.html';
+</script>
+</body>
+</html>

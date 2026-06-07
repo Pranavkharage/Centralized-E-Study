@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Study - Subject</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .navbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+  .navbar h1 { color: #3b82f6; font-size: 20px; cursor: pointer; }
+  .navbar .right { display: flex; gap: 12px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .btn-back { background: #334155; color: #e2e8f0; }
+  .btn-logout { background: #ef4444; color: white; }
+  .main { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+  .subject-header { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px 30px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+  .subject-header h2 { font-size: 28px; color: #3b82f6; }
+  .subject-header p { color: #94a3b8; margin-top: 5px; }
+  .youtube-btn { background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; }
+  .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #1e293b; padding: 5px; border-radius: 10px; border: 1px solid #334155; }
+  .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; color: #94a3b8; font-size: 14px; transition: all 0.2s; }
+  .tab.active { background: #3b82f6; color: white; }
+  /* Topics */
+  .topic-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .topic-btn { padding: 7px 14px; background: #1e293b; border: 1px solid #334155; border-radius: 20px; color: #94a3b8; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .topic-btn.active, .topic-btn:hover { background: #1d4ed8; color: #bfdbfe; border-color: #3b82f6; }
+  .topic-content { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px; }
+  .topic-content h3 { color: #3b82f6; font-size: 22px; margin-bottom: 15px; }
+  .section-label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 8px; }
+  .theory-text { color: #cbd5e1; line-height: 1.8; font-size: 15px; }
+  .example-box { background: #0f172a; border-left: 3px solid #f59e0b; padding: 14px 18px; border-radius: 0 8px 8px 0; color: #fde68a; font-size: 14px; font-style: italic; margin: 5px 0; }
+  .code-box { background: #020617; border: 1px solid #1e3a5f; border-radius: 8px; padding: 18px; overflow-x: auto; }
+  .code-box pre { color: #7dd3fc; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+  /* QnA */
+  .qna-list { display: flex; flex-direction: column; gap: 12px; }
+  .qna-item { background: #1e293b; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
+  .qna-question { padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #f1f5f9; font-size: 15px; font-weight: 500; }
+  .qna-question:hover { background: #253347; }
+  .qna-answer { padding: 15px 20px; background: #0f172a; color: #94a3b8; font-size: 14px; line-height: 1.7; display: none; border-top: 1px solid #334155; }
+  .qna-answer.open { display: block; }
+  .arrow { color: #64748b; transition: transform 0.3s; }
+  .arrow.open { transform: rotate(180deg); }
+  .loading { text-align: center; padding: 60px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <h1 onclick="window.location.href='/dashboard.html'">📚 E-Study Platform</h1>
+  <div class="right">
+    <button class="btn btn-back" onclick="window.location.href='/dashboard.html'">← Back</button>
+    <button class="btn btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div id="content"><div class="loading">Loading subject content...</div></div>
+</div>
+
+<script>
+if (!sessionStorage.getItem('user')) window.location.href = '/login.html';
+
+const params = new URLSearchParams(window.location.search);
+const subjectName = params.get('name') || 'OOP';
+let subjectData = null;
+let activeTopicIndex = 0;
+let activeTab = 'topics';
+
+async function loadSubject() {
+  try {
+    const res = await fetch('/api/subjects/' + subjectName);
+    const data = await res.json();
+    if (data.success) {
+      subjectData = data.data;
+      document.title = 'E-Study - ' + subjectName;
+      render();
+    } else {
+      document.getElementById('content').innerHTML = '<div class="loading">Subject not found.</div>';
+    }
+  } catch(e) {
+    document.getElementById('content').innerHTML = '<div class="loading">Error loading content.</div>';
+  }
+}
+
+function render() {
+  const s = subjectData;
+  const ytLink = s.youtubeLinks && s.youtubeLinks.length > 0 ? s.youtubeLinks[0] : '#';
+  document.getElementById('content').innerHTML = `
+    <div class="subject-header">
+      <div>
+        <h2>${s.subject}</h2>
+        <p>${s.topics ? s.topics.length : 0} Topics &nbsp;|&nbsp; ${s.questions ? s.questions.length : 0} Q&amp;A</p>
+      </div>
+      <a href="${ytLink}" target="_blank" class="youtube-btn">▶ OneShot Video</a>
+    </div>
+    <div class="tabs">
+      <div class="tab ${activeTab==='topics'?'active':''}" onclick="switchTab('topics')">📖 Topics</div>
+      <div class="tab ${activeTab==='qna'?'active':''}" onclick="switchTab('qna')">❓ Q&amp;A</div>
+    </div>
+    <div id="tabContent"></div>
+  `;
+  renderTab();
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  render();
+}
+
+function renderTab() {
+  if (activeTab === 'topics') renderTopics();
+  else renderQnA();
+}
+
+function renderTopics() {
+  const topics = subjectData.topics || [];
+  const t = topics[activeTopicIndex];
+  document.getElementById('tabContent').innerHTML = `
+    <div class="topic-nav">
+      ${topics.map((tp, i) => `<div class="topic-btn ${i===activeTopicIndex?'active':''}" onclick="selectTopic(${i})">${tp.topicName}</div>`).join('')}
+    </div>
+    ${t ? `
+    <div class="topic-content">
+      <h3>${t.topicName}</h3>
+      <div class="section-label">Theory</div>
+      <p class="theory-text">${t.theory}</p>
+      ${t.example ? `<div class="section-label">Example</div><div class="example-box">${t.example}</div>` : ''}
+      ${t.code ? `<div class="section-label">Code</div><div class="code-box"><pre>${escHtml(t.code)}</pre></div>` : ''}
+    </div>` : ''}
+  `;
+}
+
+function renderQnA() {
+  const qnas = subjectData.questions || [];
+  document.getElementById('tabContent').innerHTML = `
+    <div class="qna-list">
+      ${qnas.map((q, i) => `
+        <div class="qna-item">
+          <div class="qna-question" onclick="toggleQnA(${i})">
+            <span>Q${i+1}. ${q.question}</span>
+            <span class="arrow" id="arrow${i}">▼</span>
+          </div>
+          <div class="qna-answer" id="ans${i}">${q.answer}</div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function selectTopic(i) { activeTopicIndex = i; renderTopics(); }
+
+function toggleQnA(i) {
+  const ans = document.getElementById('ans' + i);
+  const arrow = document.getElementById('arrow' + i);
+  ans.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function logout() { sessionStorage.removeItem('user'); window.location.href = '/login.html'; }
+
+loadSubject();
+</script>
+</body>
+</html>
