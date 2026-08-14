@@ -97,16 +97,39 @@ centralized-estudy/
 
 ## ⚙️ Setup & Run Instructions
 
-### Prerequisites
+### 🌐 Live Deployment
+
+🔗 **Live URL:**  https://centralized-e-study.onrender.com
+
+This project is deployed using:
+- **Backend hosting:** Render (free tier)
+- **MySQL database:** Aiven (free tier)
+- **MongoDB database:** MongoDB Atlas (free tier)
+
+### Run Locally (Optional)
+
+If you want to run this project on your own machine instead of using the live deployment:
+
+#### Prerequisites
 - Java 21
-- MySQL 8.0 running locally
-- MongoDB 8.0 running locally
 - Maven
-- Any browser (Chrome recommended)
+- A MySQL database (local or cloud)
+- A MongoDB database (local or cloud)
 
-### Step 1 — Create MySQL Database
+#### Step 1 — Set Environment Variables
 
-Open cmd:
+This project reads database credentials from environment variables instead of hardcoding them.
+
+On Windows PowerShell:
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/estudy"
+$env:SPRING_DATASOURCE_USERNAME="root"
+$env:SPRING_DATASOURCE_PASSWORD="your_password"
+$env:SPRING_DATA_MONGODB_URI="mongodb://localhost:27017/estudy"
+```
+
+#### Step 2 — Create MySQL Database
+
 ```bash
 mysql -u root -p
 ```
@@ -117,7 +140,7 @@ exit;
 
 > The `users` table is created automatically by Hibernate on first run.
 
-### Step 2 — Make Sure MongoDB is Running
+#### Step 3 — Make Sure MongoDB is Running
 
 ```bash
 sc query MongoDB
@@ -127,19 +150,7 @@ Should show `STATE: 4 RUNNING`. If not:
 net start MongoDB
 ```
 
-### Step 3 — Configure application.properties
-
-```properties
-# MySQL
-spring.datasource.url=jdbc:mysql://localhost:3306/estudy
-spring.datasource.username=root
-spring.datasource.password=YOUR_PASSWORD_HERE
-
-# MongoDB
-spring.data.mongodb.uri=mongodb://localhost:27017/estudy
-```
-
-### Step 4 — Run
+#### Step 4 — Run
 
 **IntelliJ:** Open `EStudyApplication.java` → click green ▶ button
 
@@ -149,11 +160,6 @@ mvn spring-boot:run
 ```
 
 You will see in the console:
-```
-Seeding study data into MongoDB...
-Study data seeded successfully!
-Started EStudyApplication in X seconds
-```
 
 ### Step 5 — Open in Browser
 
@@ -304,7 +310,6 @@ CREATE TABLE users (
 - [ ] Admin panel to add/edit subjects
 - [ ] Progress tracking per student
 - [ ] Dark/Light mode toggle
-- [ ] Cloud deployment — MongoDB Atlas + Railway
 
 ---
 
