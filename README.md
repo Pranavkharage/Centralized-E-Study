@@ -1,4 +1,4 @@
-# Centralized E-Study Platform — Upgrade Phase 2
+# Centralized E-Study Platform — Upgraded Version
 
 Existing Spring Boot + MySQL + MongoDB application upgraded with a React (JavaScript) frontend, environment-based cloud configuration, and BCrypt password storage, JWT login tokens, and role-based API authorization.
 
