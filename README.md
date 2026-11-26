@@ -1,325 +1,98 @@
-# 📚 Centralized E-Study Platform
-### A Full-Stack Web Application with Hybrid MySQL + MongoDB Architecture
+# Centralized E-Study Platform — Upgrade Phase 2
 
-![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen?style=flat-square&logo=springboot)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql)
-![MongoDB](https://img.shields.io/badge/MongoDB-8.0-green?style=flat-square&logo=mongodb)
-![Maven](https://img.shields.io/badge/Maven-3.9-red?style=flat-square&logo=apachemaven)
-![Postman](https://img.shields.io/badge/Tested%20on-Postman-orange?style=flat-square&logo=postman)
-![Copyright](https://img.shields.io/badge/Government%20of%20India-Copyright%20Holder-gold?style=flat-square)
+Existing Spring Boot + MySQL + MongoDB application upgraded with a React (JavaScript) frontend, environment-based cloud configuration, and BCrypt password storage, JWT login tokens, and role-based API authorization.
 
----
+## Stack
+- Java 21, Spring Boot 3.2.0, Maven
+- React + JavaScript + Vite + CSS
+- MySQL (existing Aiven service) for student accounts
+- MongoDB (existing Atlas cluster) for study subjects and topics
+- Spring Security + JWT for stateless authentication and ADMIN/STUDENT roles
+- Postman for manual API checks
+- Docker multi-stage build for Render
 
-## 📌 About the Project
+## What is included in this phase
+- React login/register screen and responsive study dashboard.
+- Existing `/api/auth/register`, `/api/auth/login`, `/api/subjects/all`, and `/api/subjects/{subjectName}` API contracts retained.
+- New registrations are stored using BCrypt hashes and receive the STUDENT role.
+- Login returns a signed JWT access token and the user's role.
+- Requests to protected APIs must include `Authorization: Bearer <token>`.
+- `POST /api/subjects/add` requires ADMIN; public subject GET endpoints remain available.
+- Existing plaintext-password accounts are upgraded to BCrypt automatically after their first successful login. This avoids forcing all existing users to reset passwords.
+- Existing MongoDB subject model and `DataSeeder` content retained. Seeder inserts the five starter subjects only when the configured MongoDB `subjects` collection is empty.
+- Database credentials are read from environment variables; no production secrets are included in this repository.
+- Docker builds the React frontend and packages it with Spring Boot.
 
-**Centralized E-Study Platform** is a full-stack web application that gives students a single place to access complete interview preparation material — theory, code examples, Q&A, and YouTube OneShot videos — organized by subject and accessible through a clean browser interface.
+## Cloud deployment — existing Render service
+The current deployment document says these environment variable names are already configured in Render. Keep their existing values:
 
-### The Problem It Solves
-Students preparing for technical interviews have to browse multiple websites, YouTube videos, and PDFs to find study material. This platform centralizes everything — OOP, DSA, OS, CN, DBMS — in one place with structured content accessible after a simple login.
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATA_MONGODB_URI`
 
-### Hybrid Database Architecture
-- **MySQL** — Secure user registration and login (structured relational data — user IDs, credentials)
-- **MongoDB** — Scalable storage of all study content (unstructured nested data — topics, theory, code, Q&A, YouTube links)
+`application.properties` now reads those exact variable names. It does not contain your live passwords or Atlas URI. Do not paste credentials into source files or GitHub.
 
-> Each database is used where it fits best. User data is relational with fixed fields and foreign keys — MySQL is the right choice. Study content is deeply nested and schema-less — MongoDB's document model fits perfectly.
+For Render, keep the existing Docker runtime and deploy the updated repository. Render should build using the root `Dockerfile`. The application listens on `${PORT:8080}`.
 
-### 🏆 Government of India Copyright
-This project holds an official **Government of India Copyright** as an original student-focused academic preparation portal.
+## Local development
+1. Install JDK 21, Maven, Node.js 20+ and npm.
+2. Create local MySQL database `estudy` and start local MongoDB, or provide your own local connection values.
+3. Copy `.env.example` values into your terminal environment (do not commit a real `.env`).
+4. Start backend: `mvn spring-boot:run` from the project root.
+5. In another terminal: `cd frontend`, `npm install`, `npm run dev`.
+6. Open the Vite URL shown in the terminal. Vite proxies `/api` requests to `http://localhost:8080`.
 
----
+Alternatively, build the complete deployment image with `docker build -t centralized-estudy .` and run it with the required environment variables.
 
-## ✨ Features
-
-- 🔐 **Student Login/Register** — secure authentication via MySQL
-- 🚪 **Protected Routes** — subjects only accessible after login
-- 📖 **5 Core Subjects** — OOP, DSA, OS, CN, DBMS
-- 🧠 **50+ Topics** — theory, real code examples, diagrams
-- ❓ **Interview Q&A** — most asked interview questions with detailed answers
-- ▶️ **YouTube OneShot Videos** — best one-shot video for each subject
-- 🌐 **Browser UI** — clean interface, no Postman needed
-- 🌱 **Auto Data Seeder** — study content loads into MongoDB automatically on first run
-- 🧱 **Layered Architecture** — Controller → Service → Repository → Database
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Java 21 |
-| Framework | Spring Boot 3.2.0 |
-| Web Layer | Spring Web (REST API + Static HTML) |
-| Auth DB | Spring Data JPA + Hibernate + MySQL |
-| Content DB | Spring Data MongoDB |
-| Databases | MySQL 8.0 + MongoDB 8.0 |
-| Frontend | HTML + CSS + JavaScript (served by Spring Boot) |
-| Build Tool | Maven (pom.xml) |
-| API Testing | Postman |
-
----
-
-## 📁 Project Structure
-
-```
-centralized-estudy/
-├── pom.xml
-├── .gitignore
-└── src/main/
-    ├── java/com/pranav/estudy/
-    │   ├── EStudyApplication.java            ← Entry point (@SpringBootApplication)
-    │   ├── seeder/
-    │   │   └── DataSeeder.java               ← Auto-loads all subject data into MongoDB
-    │   ├── controller/
-    │   │   ├── HomeController.java           ← Redirects / to login page
-    │   │   ├── AuthController.java           ← /api/auth (register, login → MySQL)
-    │   │   └── SubjectController.java        ← /api/subjects (content → MongoDB)
-    │   ├── service/
-    │   │   ├── UserService.java              ← Auth business logic
-    │   │   └── SubjectService.java           ← Subject content logic
-    │   ├── repository/
-    │   │   ├── UserRepository.java           ← JpaRepository → MySQL
-    │   │   └── SubjectRepository.java        ← MongoRepository → MongoDB
-    │   ├── model/
-    │   │   ├── User.java                     ← @Entity (MySQL users table)
-    │   │   └── Subject.java                  ← @Document (MongoDB subjects collection)
-    │   └── dto/
-    │       └── StudyDTO.java                 ← Request / Response classes
-    └── resources/
-        ├── application.properties            ← MySQL + MongoDB config
-        └── static/
-            ├── login.html                    ← Register / Login page
-            ├── dashboard.html                ← Subject selection page
-            └── subject.html                  ← Topics + Q&A + YouTube page
-```
-
----
-
-## ⚙️ Setup & Run Instructions
-
-### 🌐 Live Deployment
-
-🔗 **Live URL:**  https://centralized-e-study.onrender.com
-
-This project is deployed using:
-- **Backend hosting:** Render (free tier)
-- **MySQL database:** Aiven (free tier)
-- **MongoDB database:** MongoDB Atlas (free tier)
-
-### Run Locally (Optional)
-
-If you want to run this project on your own machine instead of using the live deployment:
-
-#### Prerequisites
-- Java 21
-- Maven
-- A MySQL database (local or cloud)
-- A MongoDB database (local or cloud)
-
-#### Step 1 — Set Environment Variables
-
-This project reads database credentials from environment variables instead of hardcoding them.
-
-On Windows PowerShell:
-```powershell
-$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/estudy"
-$env:SPRING_DATASOURCE_USERNAME="root"
-$env:SPRING_DATASOURCE_PASSWORD="your_password"
-$env:SPRING_DATA_MONGODB_URI="mongodb://localhost:27017/estudy"
-```
-
-#### Step 2 — Create MySQL Database
-
-```bash
-mysql -u root -p
-```
-```sql
-CREATE DATABASE estudy;
-exit;
-```
-
-> The `users` table is created automatically by Hibernate on first run.
-
-#### Step 3 — Make Sure MongoDB is Running
-
-```bash
-sc query MongoDB
-```
-Should show `STATE: 4 RUNNING`. If not:
-```bash
-net start MongoDB
-```
-
-#### Step 4 — Run
-
-**IntelliJ:** Open `EStudyApplication.java` → click green ▶ button
-
-**Terminal:**
-```bash
-mvn spring-boot:run
-```
-
-You will see in the console:
-
-### Step 5 — Open in Browser
-
-```
-http://localhost:8080
-```
-
----
-
-## 🌐 Pages
-
-| Page | URL | Description |
+## Existing API endpoints (Postman)
+| Method | URL | Body / purpose |
 |---|---|---|
-| Login / Register | `http://localhost:8080` | Student authentication |
-| Dashboard | `http://localhost:8080/dashboard.html` | Subject selection |
-| OOP | `http://localhost:8080/subject.html?name=OOP` | OOP topics + Q&A |
-| DSA | `http://localhost:8080/subject.html?name=DSA` | DSA topics + Q&A |
-| OS | `http://localhost:8080/subject.html?name=OS` | OS topics + Q&A |
-| CN | `http://localhost:8080/subject.html?name=CN` | CN topics + Q&A |
-| DBMS | `http://localhost:8080/subject.html?name=DBMS` | DBMS topics + Q&A |
+| POST | `/api/auth/register` | `{"username":"student1","password":"at-least-8-chars"}` |
+| POST | `/api/auth/login` | `{"username":"student1","password":"your-password"}` |
+| GET | `/api/subjects/all` | List subject names |
+| GET | `/api/subjects/OOP` | Fetch complete subject content |
+| POST | `/api/subjects/add` | Add subject JSON (existing endpoint) |
 
----
+## Important migration and safety notes
+- Back up Aiven MySQL and MongoDB Atlas before deploying.
+- The `users.password` column was increased to 100 characters because BCrypt hashes are longer than the old plaintext values. Hibernate `ddl-auto=update` is retained for this incremental phase.
+- When an existing user successfully logs in with their old password, the service replaces the plaintext value with a BCrypt hash. Failed logins do not change stored passwords.
+- This phase does not yet implement profiles, learning progress, quizzes, AI content generation or an admin dashboard.
+- The existing `/api/subjects/add` endpoint is not protected by admin authorization yet. Do not expose it as a public production admin feature until authorization is added.
+- JWT is stored in sessionStorage by the React frontend and sent in the Authorization header. Logout clears the browser's token; it does not revoke a token already copied elsewhere.
 
-## 📖 Subjects and Topics Covered
 
-### ☕ OOP (13 Topics)
-What is OOP, Encapsulation, Inheritance, Polymorphism, Abstraction, Method Overloading, Method Overriding, Interface, Abstract Class vs Interface, Constructor, this and super keyword, Static keyword, final keyword
+## Phase 2 — JWT and roles
 
-### 🧩 DSA (11 Topics)
-Arrays, Linked List, Stack, Queue, Binary Search Tree, Bubble Sort, Merge Sort, Quick Sort, Binary Search, Time & Space Complexity, Graph BFS/DFS
+### Render environment variable
+Add `JWT_SECRET` with a strong Base64-encoded secret (at least 32 decoded bytes). Keep the value private. Optional: `JWT_EXPIRATION_MS` (default 86400000 = 24 hours).
 
-### 💻 OS (8 Topics)
-What is OS, Process vs Thread, CPU Scheduling Algorithms, Deadlock, Memory Management & Paging, Semaphore & Mutex, Virtual Memory & Page Replacement, File System
+### Existing MySQL database migration
+Before deploying, export a backup of Aiven MySQL, then run the SQL in `database/migrations/V2__add_user_roles.sql`. The migration assigns existing users the `STUDENT` role. Promote only your verified admin account using the commented UPDATE statement in that file.
 
-### 🌐 CN (8 Topics)
-OSI Model, TCP/IP Model, TCP vs UDP, IP Addressing & Subnetting, HTTP & HTTPS, DNS, Router vs Switch vs Hub, Protocols & Ports
+### Postman checks
+1. `POST /api/auth/register` with `{"username":"student1","password":"password123"}` — creates a STUDENT.
+2. `POST /api/auth/login` with the same credentials — response `data.accessToken` contains the JWT and `data.role` is `STUDENT`.
+3. `GET /api/subjects/all` — remains public for the current app.
+4. `POST /api/subjects/add` without a token — expect HTTP 401.
+5. `POST /api/subjects/add` with a STUDENT token — expect HTTP 403.
+6. Promote a verified account to ADMIN in MySQL, log in again, then repeat the POST with its new token — authorized.
 
-### 🗄️ DBMS (8 Topics)
-What is DBMS, ACID Properties, Normalization (1NF 2NF 3NF BCNF), SQL Commands (DDL DML DCL TCL), SQL Joins, Keys in DBMS, Indexing, Transactions & Isolation Levels
+For protected requests, set Postman Authorization type to Bearer Token and paste `data.accessToken`.
 
----
+Import `postman/E-Study-Phase2.postman_collection.json` into Postman. Run Register, then Login (the collection automatically saves the JWT), then test subject endpoints. The Add Subject request requires an ADMIN token.
 
-## 🔗 API Endpoints
 
-Base URL: `http://localhost:8080`
+## Phase 3 — AI quiz, progress and profile
 
-### Auth (MySQL)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new student |
-| POST | `/api/auth/login` | Login |
-
-```json
-POST /api/auth/register
-{ "username": "pranav", "password": "1234" }
-```
-
-### Study Content (MongoDB)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/subjects/all` | List all subject names |
-| GET | `/api/subjects/{name}` | Full content for a subject |
-| POST | `/api/subjects/add` | Add new subject content |
-
-```
-GET /api/subjects/OOP
-GET /api/subjects/DSA
-GET /api/subjects/OS
-GET /api/subjects/CN
-GET /api/subjects/DBMS
-```
-
----
-
-## 🗄️ Database Design
-
-### Why Two Databases?
-
-| | MySQL | MongoDB |
+| Method | URL | Purpose |
 |---|---|---|
-| Stores | User credentials | Study content |
-| Data type | Structured, relational | Nested, unstructured |
-| Spring module | Spring Data JPA | Spring Data MongoDB |
-| Model annotation | `@Entity` | `@Document` |
-| Repository | `JpaRepository` | `MongoRepository` |
+| POST | `/api/quiz/start` | `{subject, topicName, count}` -> questions (no answers) |
+| POST | `/api/quiz/submit` | `{attemptId, answers:[0,2,1,...]}` -> score + review |
+| POST | `/api/progress/topic` | `{subject, topicName}` -> mark topic studied |
+| GET | `/api/progress/summary` | progress per subject + quiz stats + recent attempts |
 
-### MySQL Schema (auto-created by Hibernate)
-```sql
-CREATE TABLE users (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(50) NOT NULL
-);
-```
+All four need a Bearer token. New Render environment variables: `GEMINI_API_KEY` (required for quizzes), `GEMINI_MODEL` (optional), plus `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` if not already set.
 
-### MongoDB Document Structure
-```json
-{
-  "_id": "ObjectId(...)",
-  "subject": "OOP",
-  "topics": [
-    {
-      "topicName": "Inheritance",
-      "theory": "Detailed theory explanation...",
-      "example": "class Dog extends Animal {}",
-      "code": "class Animal { void eat(){} }\nclass Dog extends Animal { void bark(){} }",
-      "diagrams": []
-    }
-  ],
-  "questions": [
-    {
-      "question": "What are the 4 pillars of OOP?",
-      "answer": "Encapsulation, Inheritance, Polymorphism, Abstraction"
-    }
-  ],
-  "youtubeLinks": ["https://youtube.com/watch?v=..."]
-}
-```
-
----
-
-## 🔑 Key Spring Annotations Used
-
-| Annotation | Purpose |
-|---|---|
-| `@SpringBootApplication` | Entry point, auto-configuration |
-| `@RestController` | REST controller, returns JSON |
-| `@Controller` | MVC controller for page redirects |
-| `@GetMapping` / `@PostMapping` | HTTP method mapping |
-| `@PathVariable` | Reads `{name}` from URL |
-| `@RequestBody` | Converts JSON to Java object |
-| `@Service` | Business logic layer bean |
-| `@Repository` | Data layer bean |
-| `@Autowired` | Spring dependency injection |
-| `@Entity` | Hibernate maps class to MySQL table |
-| `@Document` | Spring Data maps class to MongoDB collection |
-| `@Component` + `CommandLineRunner` | DataSeeder runs on app startup |
-
----
-
-## 🚀 Future Improvements
-
-- [ ] JWT Authentication with Spring Security
-- [ ] BCrypt password hashing
-- [ ] Search topics by keyword
-- [ ] Admin panel to add/edit subjects
-- [ ] Progress tracking per student
-- [ ] Dark/Light mode toggle
-
----
-
-## 👤 Author
-
-**Pranav Kharage**
-- GitHub: [@Pranavkharage](https://github.com/Pranavkharage)
-- LinkedIn: [pranav-kharage](https://www.linkedin.com/in/pranav-kharage-824354258/)
-- Email: pranavkharage21@gmail.com
-
----
-
-> 🏆 This project holds a **Government of India Copyright** as an original student-focused academic preparation platform.
+New MongoDB collections are created automatically: `quiz_banks`, `quiz_attempts`, `study_progress`. MySQL needs no change beyond Phase 2.

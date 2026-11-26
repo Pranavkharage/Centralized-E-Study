@@ -20,6 +20,9 @@ public class StudyDTO {
     public static class UserResponse {
         private Integer id;
         private String username;
+        private String role;
+        private String accessToken;
+        private String tokenType = "Bearer";
     }
 
     @Data

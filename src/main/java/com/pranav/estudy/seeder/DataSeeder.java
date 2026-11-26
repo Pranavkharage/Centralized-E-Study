@@ -1,6 +1,10 @@
 package com.pranav.estudy.seeder;
 
 import com.pranav.estudy.model.Subject;
+import com.pranav.estudy.model.User;
+import com.pranav.estudy.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.pranav.estudy.repository.SubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -15,8 +19,21 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     private SubjectRepository subjectRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Value("${app.admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:}")
+    private String adminPassword;
+
     @Override
     public void run(String... args) {
+        seedAdmin();
         // Only seed if database is empty
         if (subjectRepository.count() == 0) {
             System.out.println("Seeding study data into MongoDB...");
@@ -27,6 +44,17 @@ public class DataSeeder implements CommandLineRunner {
         } else {
             System.out.println("Study data already exists. Skipping seed.");
         }
+    }
+
+    // Creates the first ADMIN from ADMIN_USERNAME / ADMIN_PASSWORD. Skipped if the user already exists.
+    private void seedAdmin() {
+        if (adminPassword.isBlank() || userRepository.existsByUsername(adminUsername)) return;
+        User admin = new User();
+        admin.setUsername(adminUsername);
+        admin.setPassword(passwordEncoder.encode(adminPassword));
+        admin.setRole("ADMIN");
+        userRepository.save(admin);
+        System.out.println("Admin account created: " + adminUsername);
     }
 
     // ==================== OOP ====================

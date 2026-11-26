@@ -1,2 +1,9 @@
-target/ 
-.idea/ 
+target/
+.idea/
+*.class
+node_modules/
+frontend/dist/
+.env
+.env.*
+!.env.example
+.DS_Store

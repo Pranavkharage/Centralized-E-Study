@@ -20,6 +20,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String password;
+
+    // Public registration always assigns STUDENT. Promote an account to ADMIN
+    // manually using the supplied SQL migration after verifying the account.
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'STUDENT'")
+    private String role = "STUDENT";
 }
