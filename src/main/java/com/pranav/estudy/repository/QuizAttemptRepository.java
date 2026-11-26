@@ -9,5 +9,7 @@ import java.util.Optional;
 public interface QuizAttemptRepository extends MongoRepository<QuizAttempt, String> {
     Optional<QuizAttempt> findByIdAndUsername(String id, String username);
 
+    long countBySubmittedTrue();
+
     List<QuizAttempt> findByUsernameAndSubmittedTrueOrderBySubmittedAtDesc(String username);
 }

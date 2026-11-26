@@ -8,6 +8,22 @@ public class StudyDTO {
     public static class RegisterRequest {
         private String username;
         private String password;
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String phone;
+        private String branch;
+        private String studyYear;
+    }
+
+    @Data
+    public static class UpdateProfileRequest {
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String phone;
+        private String branch;
+        private String studyYear;
     }
 
     @Data
@@ -21,6 +37,12 @@ public class StudyDTO {
         private Integer id;
         private String username;
         private String role;
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String phone;
+        private String branch;
+        private String studyYear;
         private String accessToken;
         private String tokenType = "Bearer";
     }
